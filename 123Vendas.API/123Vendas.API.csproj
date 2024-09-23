@@ -5,10 +5,23 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>_123Vendas.API</RootNamespace>
+
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\123Vendas.Application\123Vendas.Application.csproj" />
+    <ProjectReference Include="..\123Vendas.Core\123Vendas.Core.csproj" />
+    <ProjectReference Include="..\123Vendas.Infrastructure\123Vendas.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
