@@ -83,53 +83,13 @@ namespace _123Vendas.UnitTests.BusinessTests
         }
 
         [Fact]
-        public async Task AtualizarVenda_SeVendaCancelada_DevePublicarEvento_Cancelamento()
-        {
-            // Arrange
-            var venda = CreateFakeVendaWithItens();
-            venda.Cancelado = false;
-            Expression<Func<Venda, bool>> filter = v => v.Id == venda.Id;
-            _vendaRepository.Get(filter, Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>()).Returns(venda);
-
-            var vendaDto = _vendaDtoFaker.Generate();
-            vendaDto.Id = venda.Id;
-            vendaDto.Cancelado = true;
-
-            // Act
-            await _vendaBusiness.AtualizarVendaAsync(vendaDto);
-
-            // Assert
-            _messageBus.Received(1).Publish("CompraCancelada", Arg.Any<string>());
-        }
-
-        [Fact]
-        public async Task AtualizarVenda_SeNaoCancelada_DevePublicarEvento_Alteracao()
-        {
-            // Arrange
-            var venda = CreateFakeVendaWithItens();
-            venda.Cancelado = false;
-            Expression<Func<Venda, bool>> filter = v => v.Id == venda.Id;
-            _vendaRepository.Get(filter, Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>()).Returns(venda);
-
-            var vendaDto = _vendaDtoFaker.Generate();
-            vendaDto.Id = venda.Id;
-            vendaDto.Cancelado = false;
-
-            // Act
-            await _vendaBusiness.AtualizarVendaAsync(vendaDto);
-
-            // Assert
-            _messageBus.Received(1).Publish("CompraAlterada", Arg.Any<string>());
-        }
-
-        [Fact]
         public async Task CancelarVenda_DevePublicarEvento_Cancelamento()
         {
             // Arrange
             var venda = CreateFakeVendaWithItens();
             venda.Cancelado = false;
-            Expression<Func<Venda, bool>> filter = v => v.Id == venda.Id;
-            _vendaRepository.Get(filter, Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>()).Returns(venda);
+
+            _vendaRepository.GetById(venda.Id).Returns(venda);
 
             // Act
             await _vendaBusiness.CancelarVendaAsync(venda.Id);
@@ -139,12 +99,38 @@ namespace _123Vendas.UnitTests.BusinessTests
         }
 
         [Fact]
+        public async Task AtualizarVenda_SeNaoCancelada_DevePublicarEvento_Alteracao()
+        {
+            // Arrange
+            var venda = CreateFakeVendaWithItens(); 
+            venda.Cancelado = false;
+            Expression<Func<Venda, bool>> filter = v => v.Id == venda.Id;
+
+            _vendaRepository.Get(Arg.Is<Expression<Func<Venda, bool>>>(f => f.Compile().Invoke(venda)),
+                Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>())
+                .Returns(venda);  
+
+            var vendaDto = _vendaDtoFaker.Generate();  
+            vendaDto.Id = venda.Id;
+            vendaDto.Cancelado = false;
+
+            // Act
+            await _vendaBusiness.AtualizarVendaAsync(vendaDto);
+
+            // Assert
+            _messageBus.Received(1).Publish("CompraAlterada", Arg.Any<string>()); 
+        }
+
+        [Fact]
         public async Task CancelarItem_DevePublicarEvento_ItemCancelado()
         {
             // Arrange
             var venda = CreateFakeVendaWithItens();
             Expression<Func<Venda, bool>> filter = v => v.Id == venda.Id;
-            _vendaRepository.Get(filter, Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>()).Returns(venda);
+
+            _vendaRepository.Get(Arg.Is<Expression<Func<Venda, bool>>>(f => f.Compile().Invoke(venda)),
+                Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>())
+                .Returns(venda);
 
             var itemVenda = venda.Itens.First();
 
@@ -161,7 +147,10 @@ namespace _123Vendas.UnitTests.BusinessTests
             // Arrange
             var venda = CreateFakeVendaWithItens();
             Expression<Func<Venda, bool>> filter = v => v.Id == venda.Id;
-            _vendaRepository.Get(filter, Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>()).Returns(venda);
+
+            _vendaRepository.Get(Arg.Is<Expression<Func<Venda, bool>>>(f => f.Compile().Invoke(venda)),
+                Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>())
+                .Returns(venda);
 
             // Act
             var result = await _vendaBusiness.GetByIdAsync(venda.Id);
@@ -176,7 +165,8 @@ namespace _123Vendas.UnitTests.BusinessTests
         {
             // Arrange
             var vendas = _vendaFaker.Generate(2);
-            _vendaRepository.GetAll().Returns(vendas);
+            _vendaRepository.GetAll(Arg.Any<Func<IQueryable<Venda>, IQueryable<Venda>>>())
+                .Returns(vendas);
 
             // Act
             var result = await _vendaBusiness.ObterTodasVendasAsync();
